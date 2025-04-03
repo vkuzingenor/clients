@@ -1,1 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Динамическая таблица</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8.5px; /* Уменьшено на 15% */
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+            width: 75px; /* Устанавливаем ширину всех столбцов */
+            height: 34px; /* Уменьшено на 15% */
+        }
+        th:nth-child(9), td:nth-child(9) {
+            width: 200px; /* Увеличиваем ширину столбца "Комментарий" */
+        }
+        .add-row {
+            margin-top: 10px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: green;
+            color: white;
+            border: none;
+        }
+        .delete-row {
+            background-color: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px; /* Соответствует высоте ячейки */
+            height: 100%;
+            overflow: hidden;
+            border: none;
+            background: transparent;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <table id="dynamicTable">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Филиал</th>
+                <th>МП</th>
+                <th>Лимит</th>
+                <th>Кол-во ТС</th>
+                <th>Вид ТС</th>
+                <th>Срок перевода</th>
+                <th>Эффект</th>
+                <th>Комментарий</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <button class="add-row" onclick="addRow()">Добавить строку</button>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", loadTable);
 
+        function addRow(data = {}) {
+            let table = document.getElementById("dynamicTable").getElementsByTagName('tbody')[0];
+            let newRow = table.insertRow();
+            
+            for (let i = 0; i < 9; i++) {
+                let cell = newRow.insertCell(i);
+                let textarea = document.createElement("textarea");
+                textarea.value = data[i] || "";
+                textarea.style.display = "flex";
+                textarea.style.alignItems = "center";
+                textarea.style.justifyContent = "center";
+                textarea.style.textAlign = "center";
+                textarea.oninput = function() {
+                    this.style.height = "auto";
+                    this.style.height = this.scrollHeight + "px";
+                };
+                textarea.onkeypress = function(event) {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        this.value += "\n";
+                    }
+                };
+                textarea.onblur = function() {
+                    formatText(this);
+                    saveTable();
+                };
+                cell.appendChild(textarea);
+            }
+            
+            let actionCell = newRow.insertCell(9);
+            let deleteButton = document.createElement("button");
+            deleteButton.innerText = "Удалить";
+            deleteButton.className = "delete-row";
+            deleteButton.onclick = function() {
+                table.deleteRow(newRow.rowIndex - 1);
+                saveTable();
+            };
+            actionCell.appendChild(deleteButton);
+            saveTable();
+        }
+
+        function formatText(textarea) {
+            textarea.style.textAlign = "center";
+            textarea.style.display = "flex";
+            textarea.style.alignItems = "center";
+            textarea.style.justifyContent = "center";
+            textarea.style.height = "auto";
+            textarea.style.height = textarea.scrollHeight + "px";
+        }
+
+        function saveTable() {
+            let tableData = [];
+            document.querySelectorAll("#dynamicTable tbody tr").forEach(row => {
+                let rowData = [];
+                row.querySelectorAll("textarea").forEach(cell => {
+                    rowData.push(cell.value);
+                });
+                tableData.push(rowData);
+            });
+            localStorage.setItem("tableData", JSON.stringify(tableData));
+        }
+
+        function loadTable() {
+            let savedData = localStorage.getItem("tableData");
+            if (savedData) {
+                JSON.parse(savedData).forEach(row => addRow(row));
+            }
+        }
+    </script>
+</body>
+</html>
