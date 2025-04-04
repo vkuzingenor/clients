@@ -11,17 +11,17 @@
         }
         th, td {
             border: 1px solid black;
-            padding: 8.5px; /* Уменьшено на 15% */
+            padding: 8.5px;
             text-align: center;
             vertical-align: middle;
             word-wrap: break-word;
-            width: 75px; /* Устанавливаем ширину всех столбцов */
-            height: 34px; /* Уменьшено на 15% */
+            width: 75px;
+            height: 34px;
         }
         th:nth-child(9), td:nth-child(9) {
-            width: 200px; /* Увеличиваем ширину столбца "Комментарий" */
+            width: 200px;
         }
-        .add-row {
+        .add-row, .print-table {
             margin-top: 10px;
             padding: 10px;
             cursor: pointer;
@@ -43,12 +43,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 34px; /* Соответствует высоте ячейки */
+            min-height: 34px;
             height: 100%;
             overflow: hidden;
             border: none;
             background: transparent;
             padding: 5px 0;
+        }
+        .last-edited {
+            font-size: 10px;
+            color: gray;
+            text-align: right;
+            display: block;
         }
     </style>
 </head>
@@ -72,6 +78,7 @@
         </tbody>
     </table>
     <button class="add-row" onclick="addRow()">Добавить строку</button>
+    <button class="print-table" onclick="printTable()">Печать</button>
     
     <script>
         document.addEventListener("DOMContentLoaded", loadTable);
@@ -84,10 +91,6 @@
                 let cell = newRow.insertCell(i);
                 let textarea = document.createElement("textarea");
                 textarea.value = data[i] || "";
-                textarea.style.display = "flex";
-                textarea.style.alignItems = "center";
-                textarea.style.justifyContent = "center";
-                textarea.style.textAlign = "center";
                 textarea.oninput = function() {
                     this.style.height = "auto";
                     this.style.height = this.scrollHeight + "px";
@@ -100,9 +103,16 @@
                 };
                 textarea.onblur = function() {
                     formatText(this);
+                    if (i === 8) updateLastEdited(cell);
                     saveTable();
                 };
                 cell.appendChild(textarea);
+                if (i === 8) {
+                    let lastEdited = document.createElement("span");
+                    lastEdited.className = "last-edited";
+                    lastEdited.innerText = data[9] || "";
+                    cell.appendChild(lastEdited);
+                }
             }
             
             let actionCell = newRow.insertCell(9);
@@ -115,6 +125,11 @@
             };
             actionCell.appendChild(deleteButton);
             saveTable();
+        }
+
+        function updateLastEdited(cell) {
+            let lastEdited = cell.querySelector(".last-edited");
+            lastEdited.innerText = "Последнее изменение: " + new Date().toLocaleString();
         }
 
         function formatText(textarea) {
@@ -133,6 +148,8 @@
                 row.querySelectorAll("textarea").forEach(cell => {
                     rowData.push(cell.value);
                 });
+                let lastEdited = row.querySelector(".last-edited");
+                rowData.push(lastEdited ? lastEdited.innerText : "");
                 tableData.push(rowData);
             });
             localStorage.setItem("tableData", JSON.stringify(tableData));
@@ -143,6 +160,10 @@
             if (savedData) {
                 JSON.parse(savedData).forEach(row => addRow(row));
             }
+        }
+
+        function printTable() {
+            window.print();
         }
     </script>
 </body>
